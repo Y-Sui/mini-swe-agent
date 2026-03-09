@@ -9,7 +9,7 @@ JSON="${2:-/home/yuansui/swe-factory-dev/internal-swe-bench-data/results_v1_gpt_
 MODEL_DIR="${MODEL//\//_}"
 MODEL_DIR="${MODEL_DIR//./_}"
 MODEL_DIR="${MODEL_DIR//-/_}"
-OUTPUT="${3:-/data/yuansui/internal-swe-bench/results/${MODEL_DIR}}"
+OUTPUT="${3:-/data/yuansui/internal-swe-bench-data/results/${MODEL_DIR}}"
 shift 2>/dev/null || true; shift 2>/dev/null || true; shift 2>/dev/null || true
 
 python3 -m minisweagent.run.benchmarks.swebench \

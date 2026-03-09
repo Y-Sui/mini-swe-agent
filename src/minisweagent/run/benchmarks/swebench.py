@@ -244,7 +244,24 @@ def main(
 
     instances = filter_instances(instances, filter_spec=filter_spec, slice_spec=slice_spec, shuffle=shuffle)
     if not redo_existing and (output_path / "preds.json").exists():
-        existing_instances = list(json.loads((output_path / "preds.json").read_text()).keys())
+        preds = json.loads((output_path / "preds.json").read_text())
+        # Re-run instances that didn't submit successfully
+        rerun_ids = set()
+        for iid, pred in preds.items():
+            if pred.get("model_patch"):
+                continue
+            traj_path = output_path / iid / f"{iid}.traj.json"
+            if traj_path.exists():
+                traj_info = json.loads(traj_path.read_text()).get("info", {})
+                exit_status = traj_info.get("exit_status", "")
+                if exit_status != "Submitted":
+                    rerun_ids.add(iid)
+            else:
+                # No trajectory at all (e.g. Docker failure) — re-run
+                rerun_ids.add(iid)
+        if rerun_ids:
+            logger.info(f"Re-running {len(rerun_ids)} non-submitted instances: {rerun_ids}")
+        existing_instances = set(preds.keys()) - rerun_ids
         logger.info(f"Skipping {len(existing_instances)} existing instances")
         instances = [instance for instance in instances if instance["instance_id"] not in existing_instances]
     logger.info(f"Running on {len(instances)} instances...")
