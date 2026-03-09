@@ -237,7 +237,10 @@ def main(
 
     dataset_path = DATASET_MAPPING.get(subset, subset)
     logger.info(f"Loading dataset {dataset_path}, split {split}...")
-    instances = list(load_dataset(dataset_path, split=split))
+    if dataset_path.endswith(".json"):
+        instances = list(load_dataset("json", data_files=dataset_path, split="train"))
+    else:
+        instances = list(load_dataset(dataset_path, split=split))
 
     instances = filter_instances(instances, filter_spec=filter_spec, slice_spec=slice_spec, shuffle=shuffle)
     if not redo_existing and (output_path / "preds.json").exists():

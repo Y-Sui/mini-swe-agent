@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import time
 
 import requests
@@ -37,7 +38,11 @@ class OpenRouterResponseModel(OpenRouterModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.config = OpenRouterResponseModelConfig(**kwargs)
-        self._api_url = "https://openrouter.ai/api/v1/responses"
+        api_base = self.config.api_base or os.getenv("OPENROUTER_API_BASE", "")
+        if api_base:
+            self._api_url = api_base.rstrip("/") + "/responses"
+        else:
+            self._api_url = "https://openrouter.ai/api/v1/responses"
 
     def _query(self, messages: list[dict[str, str]], **kwargs):
         headers = {

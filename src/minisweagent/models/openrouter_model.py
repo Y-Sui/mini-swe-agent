@@ -24,6 +24,10 @@ logger = logging.getLogger("openrouter_model")
 class OpenRouterModelConfig(BaseModel):
     model_name: str
     model_kwargs: dict[str, Any] = {}
+    api_base: str | None = None
+    """Custom API base URL. If set, overrides the default OpenRouter endpoint."""
+    api_key: str | None = None
+    """API key. If set, overrides the OPENROUTER_API_KEY environment variable."""
     set_cache_control: Literal["default_end"] | None = None
     """Set explicit cache control markers, for example for Anthropic models"""
     cost_tracking: Literal["default", "ignore_errors"] = os.getenv("MSWEA_COST_TRACKING", "default")
@@ -56,8 +60,12 @@ class OpenRouterModel:
 
     def __init__(self, **kwargs):
         self.config = OpenRouterModelConfig(**kwargs)
-        self._api_url = "https://openrouter.ai/api/v1/chat/completions"
-        self._api_key = os.getenv("OPENROUTER_API_KEY", "")
+        self._api_key = self.config.api_key or os.getenv("OPENROUTER_API_KEY", "")
+        api_base = self.config.api_base or os.getenv("OPENROUTER_API_BASE", "")
+        if api_base:
+            self._api_url = api_base.rstrip("/") + "/chat/completions"
+        else:
+            self._api_url = "https://openrouter.ai/api/v1/chat/completions"
 
     def _query(self, messages: list[dict[str, str]], **kwargs):
         headers = {
